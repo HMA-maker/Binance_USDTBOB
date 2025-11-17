@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance P2P Rate Viewer</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
+        #rate { font-size: 3em; color: #f0b90b; }
+        .spinner { border: 4px solid rgba(0,0,0,.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #f0b90b; animation: spin 1s ease infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <h1>Cotización USDT/BOB (Binance P2P - Compra)</h1>
+    <div id="rate">
+        <div class="spinner"></div>
+    </div>
+    <p id="status">Cargando datos...</p>
+
+    <script>
+        /**
+         * Función para obtener el precio de USDT en Bolivianos desde Binance P2P.
+         * NOTA: Esta API puede tener restricciones de CORS al ser llamada desde un navegador.
+         */
+        async function obtenerPrecioUSDT() {
+            const statusElement = document.getElementById('status');
+            const rateElement = document.getElementById('rate');
+            
+            try {
+                // Actualizar UI
+                statusElement.textContent = 'Obteniendo datos de Binance P2P...';
+                rateElement.innerHTML = '<div class="spinner"></div>';
+                
+                const response = await fetch("https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        asset: "USDT",
+                        fiat: "BOB",
+                        tradeType: "BUY",
+                        page: 1,
+                        rows: 5 // Tomar los primeros 5 anuncios
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.data || data.data.length === 0) {
+                    throw new Error("No se encontraron anuncios disponibles.");
+                }
+                
+                const precio = parseFloat(data.data[0].adv.price);
+                
+                // Actualizar UI con el precio
+                rateElement.innerHTML = `<span>${precio.toFixed(2)} Bs</span>`;
+                statusElement.textContent = 'Datos actualizados. (Fuente: Binance P2P)';
+                
+                return precio;
+                
+            } catch (error) {
+                console.error('Error al obtener datos:', error);
+                rateElement.innerHTML = '<span>ERROR</span>';
+                statusElement.textContent = 'Error al cargar. Revisa la consola o CORS.';
+            }
+        }
+
+        // Ejecutar la función al cargar la página
+        document.addEventListener('DOMContentLoaded', obtenerPrecioUSDT);
+    </script>
+</body>
+</html>
