@@ -1,9 +1,12 @@
-name: Actualizar Tasa P2P
+# .github/workflows/update_rate.yml
+
+name: Actualizar Cotización P2P
 
 on:
+  # Se ejecuta cada 4 horas (0, 4, 8, 12, 16, 20)
   schedule:
-    # Se ejecuta cada 4 horas (Ejemplo)
     - cron: '0 */4 * * *' 
+  # Permite ejecutar manualmente desde la interfaz de GitHub
   workflow_dispatch:
 
 jobs:
@@ -12,6 +15,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      # Es importante hacer el checkout de la rama principal
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -19,15 +24,17 @@ jobs:
 
     - name: Install dependencies
       run: |
+        # La única dependencia es requests
         pip install requests
 
-    - name: Run Python script and save result
+    - name: Run Python script and generate JSON
       run: |
-        # Asumiendo que el script de Python ha sido modificado para guardar el resultado en rate.txt
-        python binance_p2p_python.py > rate.txt 
+        # Ejecuta el script. Este genera/sobrescribe rate.json
+        python binance_p2p_python.py
 
     - name: Commit and push changes
+      # Esta acción hace commit y push automáticamente del archivo generado
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: 'Automated: Update P2P rate'
-        files: 'rate.txt'
+        commit_message: '🤖 Automated: Update P2P rate [skip ci]'
+        files: 'rate.json'
