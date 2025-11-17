@@ -1,0 +1,33 @@
+name: Actualizar Tasa P2P
+
+on:
+  schedule:
+    # Se ejecuta cada 4 horas (Ejemplo)
+    - cron: '0 */4 * * *' 
+  workflow_dispatch:
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install requests
+
+    - name: Run Python script and save result
+      run: |
+        # Asumiendo que el script de Python ha sido modificado para guardar el resultado en rate.txt
+        python binance_p2p_python.py > rate.txt 
+
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: 'Automated: Update P2P rate'
+        files: 'rate.txt'
